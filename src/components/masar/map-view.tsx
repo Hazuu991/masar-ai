@@ -5,21 +5,20 @@ import 'leaflet/dist/leaflet.css';
 import { cameras, parkingZones } from '../../lib/masar-data';
 import { useLanguage } from '../../contexts/language-context';
 import { useQuery } from "convex/react";
-// Fixed API path for Netlify/GitHub structure
 import { api } from "../../../convex/_generated/api";
 
 const userIcon = L.divIcon({
   className: 'user-location-pulse',
-  html: `<div style="width:20px; height:20px; background:#3b82f6; border-radius:50%; border:2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
+  html: `<div style="width:22px; height:22px; background:#3b82f6; border-radius:50%; border:2px solid white; box-shadow: 0 0 15px rgba(59,130,246,0.6);"></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 const cameraIcon = L.divIcon({
   className: 'custom-div-icon',
-  html: `<div style="background-color: #DC2626; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">📷</div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  html: `<div style="background-color: #ef4444; width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">📷</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
 });
 
 function MapController({ center, zoom }: { center: [number, number], zoom: number }) {
@@ -34,7 +33,6 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
 
 export const MapView = ({ userPos, showParking }: any) => {
   const { lang, t } = useLanguage();
-  // We use a try/catch or fallback because convex might not be fully linked yet
   const incidents = useQuery(api.incidents.get) || [];
   
   const [mapCenter, setMapCenter] = useState<[number, number]>([26.4207, 50.0888]);
@@ -61,24 +59,36 @@ export const MapView = ({ userPos, showParking }: any) => {
   };
 
   return (
-    <div className="h-full w-full relative bg-[#0A0F14]">
-      {/* FIXED SEARCH BAR: Lowered top and forced z-index */}
-      <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-md">
-        <form onSubmit={handleSearch} className="flex items-center bg-[#111827]/95 backdrop-blur-xl border border-emerald-500/40 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="h-full w-full relative">
+      {/* SEARCH BAR FIX: 
+          - Used top-32 to move it well below the "Parking Assistant" box.
+          - Added z-[9999] AND !important styling logic.
+      */}
+      <div 
+        className="fixed left-1/2 -translate-x-1/2 w-[90%] max-w-md"
+        style={{ top: '130px', zIndex: 99999 }}
+      >
+        <form onSubmit={handleSearch} className="flex items-center bg-[#111827] border-2 border-emerald-500/50 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden">
           <input 
             type="text"
-            className="flex-1 p-4 bg-transparent text-white placeholder-gray-400 focus:outline-none text-sm"
-            placeholder={lang === 'ar' ? 'البحث عن موقع...' : 'Search Dammam...'}
+            className="flex-1 p-4 bg-transparent text-white placeholder-gray-500 focus:outline-none text-base"
+            placeholder={lang === 'ar' ? 'بحث في الدمام...' : 'Search Dammam...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button type="submit" className="p-4 text-emerald-400 hover:text-emerald-300">
+          <button type="submit" className="p-4 bg-emerald-600/20 text-emerald-400 border-l border-emerald-500/30">
             🔍
           </button>
         </form>
       </div>
 
-      <MapContainer center={mapCenter} zoom={zoom} className="h-full w-full" zoomControl={false} style={{ height: '100%', width: '100%' }}>
+      <MapContainer 
+        center={mapCenter} 
+        zoom={zoom} 
+        className="h-full w-full" 
+        zoomControl={false}
+        style={{ height: '100vh', width: '100vw', background: '#0A0F14' }}
+      >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         <MapController center={mapCenter} zoom={zoom} />
 
@@ -87,13 +97,13 @@ export const MapView = ({ userPos, showParking }: any) => {
         {cameras.map((camera) => (
           <Marker key={camera.id} position={[camera.lat, camera.lng]} icon={cameraIcon}>
             <Popup>
-              <div className="p-2 text-center min-w-[120px] text-black">
-                <h3 className="font-bold">{lang === 'ar' ? camera.nameAr : camera.nameEn}</h3>
+              <div className="p-2 text-center text-black min-w-[140px]">
+                <h3 className="font-bold text-sm mb-2">{lang === 'ar' ? camera.nameAr : camera.nameEn}</h3>
                 <button 
                   onClick={() => getDirections(camera.lat, camera.lng)}
-                  className="mt-2 w-full bg-emerald-600 text-white py-1 px-2 rounded-lg text-xs"
+                  className="w-full bg-emerald-600 text-white py-2 px-3 rounded-xl text-xs font-bold shadow-md"
                 >
-                  🚗 {lang === 'ar' ? 'إظهار الطريق' : 'Directions'}
+                  🚗 {lang === 'ar' ? 'اتجه إلى هنا' : 'Navigate'}
                 </button>
               </div>
             </Popup>
@@ -101,11 +111,16 @@ export const MapView = ({ userPos, showParking }: any) => {
         ))}
 
         {showParking && parkingZones.map((zone: any) => (
-          <Polygon key={zone.id} positions={zone.coords} pathOptions={{ color: zone.color, fillOpacity: 0.4 }}>
+          <Polygon key={zone.id} positions={zone.coords} pathOptions={{ color: zone.color, fillOpacity: 0.5, weight: 3 }}>
             <Popup>
                <div className="p-2 text-center text-black">
-                 <p className="font-bold">{lang === 'ar' ? zone.nameAr : zone.nameEn}</p>
-                 <button onClick={() => getDirections(zone.coords[0][0], zone.coords[0][1])} className="text-blue-600 underline text-xs">Navigate</button>
+                 <p className="font-bold mb-1">{lang === 'ar' ? zone.nameAr : zone.nameEn}</p>
+                 <button 
+                    onClick={() => getDirections(zone.coords[0][0], zone.coords[0][1])} 
+                    className="text-emerald-700 font-bold underline text-xs"
+                  >
+                    Go to Zone
+                  </button>
                </div>
             </Popup>
           </Polygon>
