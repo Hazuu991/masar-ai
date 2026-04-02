@@ -5,21 +5,12 @@ import 'leaflet/dist/leaflet.css';
 import { cameras } from '../../lib/masar-data';
 import { useLanguage } from '../../contexts/language-context';
 
-// Simple icon fix
+// Fixing the marker icon shadow error
 const cameraIcon = L.divIcon({
   className: 'custom-icon',
   html: `<div style="background:#ef4444; width:30px; height:30px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">📷</div>`,
   iconSize: [30, 30],
 });
-
-// Component to handle moving the map
-function ChangeView({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) map.setView(center, 15);
-  }, [center, map]);
-  return null;
-}
 
 export const MapView = () => {
   const { lang } = useLanguage();
@@ -42,9 +33,9 @@ export const MapView = () => {
 
   return (
     <div style={{ height: '100vh', width: '100vw', position: 'relative', background: '#0A0F14' }}>
-      {/* SEARCH BAR - Using direct styles to avoid CSS conflicts */}
-      <div style={{ position: 'fixed', top: '140px', left: '5%', width: '90%', zIndex: 9999, pointerEvents: 'auto' }}>
-        <form onSubmit={handleSearch} style={{ display: 'flex', background: '#111827', border: '2px solid #10b981', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+      {/* SEARCH BAR */}
+      <div style={{ position: 'fixed', top: '140px', left: '5%', width: '90%', zIndex: 10000 }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', background: '#111827', border: '2px solid #10b981', borderRadius: '12px', overflow: 'hidden' }}>
           <input 
             style={{ flex: 1, padding: '15px', background: 'transparent', color: 'white', border: 'none', outline: 'none', fontSize: '16px' }}
             placeholder={lang === 'ar' ? 'بحث...' : 'Search Dammam...'}
@@ -54,7 +45,7 @@ export const MapView = () => {
           <button 
             type="button" 
             onClick={handleSearch}
-            style={{ padding: '0 20px', background: '#10b981', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+            style={{ padding: '0 20px', background: '#10b981', color: '#000', fontWeight: 'bold', border: 'none' }}
           >
             GO
           </button>
@@ -68,8 +59,10 @@ export const MapView = () => {
         zoomControl={false}
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-        <ChangeView center={center} />
         
+        {/* We use a simple Marker for the center rather than a complex controller to prevent crashes */}
+        <Marker position={center} opacity={0} />
+
         {cameras.map((c) => (
           <Marker key={c.id} position={[c.lat, c.lng]} icon={cameraIcon}>
             <Popup>
